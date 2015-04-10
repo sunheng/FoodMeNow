@@ -1,6 +1,7 @@
 package com.sunhengtaing.foodmenow;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.widget.TextView;
 
@@ -31,30 +32,18 @@ import com.beust.jcommander.Parameter;
  */
 public class YelpAPI extends AsyncTask<String, Void, String>{
 
-  private static final String API_HOST = "api.yelp.com";
-//  private static final String DEFAULT_TERM = "dinner";
-//  private static final String DEFAULT_LOCATION = "San Francisco, CA";
-  private static final int SEARCH_LIMIT = 3;
-  private static final String SEARCH_PATH = "/v2/search";
-  private static final String BUSINESS_PATH = "/v2/business";
+    private static final String API_HOST = "api.yelp.com";
+    private static final int SEARCH_LIMIT = 3;
+    private static final String SEARCH_PATH = "/v2/search";
+    private static final String BUSINESS_PATH = "/v2/business";
 
     private TextView mContent;
     private String mConsumerKey;
     private String mConsumerSecret;
     private String mToken;
     private String mTokenSecret;
-
-  /*
-   * Update OAuth credentials below from the Yelp Developers API site:
-   * http://www.yelp.com/developers/getting_started/api_access
-   */
-//  private static final String CONSUMER_KEY = "-4fS2y7Rwml9xXowup8Pxw";
-//  private static final String CONSUMER_SECRET = "eKssg6pSHmtq1580Op35ae3Ozuw";
-//  private static final String TOKEN = "wKUe0xXlbtzgggeIpyvqEGg7qAz-cEPL";
-//  private static final String TOKEN_SECRET = "P4faV3XaG6VUfSWy-5_Wq0dVX_Q";
-
-  OAuthService service;
-  Token accessToken;
+    OAuthService service;
+    Token accessToken;
 
   /**
    * Setup the Yelp API OAuth credentials.
@@ -64,12 +53,13 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
    * @param token Token
    * @param tokenSecret Token secret
    */
-  public YelpAPI(TextView content, String consumerKey, String consumerSecret, String token, String tokenSecret) {
-    mContent = content;
+  public YelpAPI(String consumerKey, String consumerSecret, String token,
+                 String tokenSecret, TextView content) {
     mConsumerKey = consumerKey;
     mConsumerSecret = consumerSecret;
     mToken = token;
     mTokenSecret = tokenSecret;
+    mContent = content;
   }
 
   /**
@@ -77,15 +67,14 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
    * <p>
    * See <a href="http://www.yelp.com/developers/documentation/v2/search_api">Yelp Search API V2</a>
    * for more info.
-   * 
-   * @param term <tt>String</tt> of the search term to be queried
-   * @param location <tt>String</tt> of the location
+   *
    * @return <tt>String</tt> JSON Response
    */
-  public String searchForBusinessesByLocation(String term, String location) {
+  public String searchForBusinessesByLocation(String term, String latitude, String longitude, String radius) {
     OAuthRequest request = createOAuthRequest(SEARCH_PATH);
     request.addQuerystringParameter("term", term);
-    request.addQuerystringParameter("location", location);
+    request.addQuerystringParameter("ll", latitude + "," + longitude);
+    request.addQuerystringParameter("radius_filter", radius);
     request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
   }
@@ -132,7 +121,7 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
     protected String doInBackground(String... params) {
         this.service = new ServiceBuilder().provider(TwoStepOAuth.class).apiKey(mConsumerKey).apiSecret(mConsumerSecret).build();
         this.accessToken = new Token(mToken, mTokenSecret);
-        String businesses = searchForBusinessesByLocation("food", "atlanta");
+        String businesses = searchForBusinessesByLocation(params[0], params[1], params[2], params[3]);
         return businesses;
     }
 

@@ -21,11 +21,20 @@ import org.json.simple.parser.ParseException;
 
 public class HomeActivity extends ActionBarActivity {
 
+    private String mLatitude;
+    private String mLongitude;
+    private String mTypeOfFood;
+    private String mRadius;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        mTypeOfFood = "Lunch";
+        mRadius = "1000";
+        mLatitude = 33.774018 + "";
+        mLongitude = -84.398813 + "";
         findButtonListener();
     }
 
@@ -36,30 +45,12 @@ public class HomeActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 TextView content = (TextView) findViewById(R.id.tvContent);
-//                content.setText("WOO");
                 String consumerKey = getResources().getString(R.string.CONSUMER_KEY);
-//                content.setText(consumerKey);
                 String consumerSecret = getResources().getString(R.string.CONSUMER_SECRET);
                 String token = getResources().getString(R.string.TOKEN);
                 String tokenSecret = getResources().getString(R.string.TOKEN_SECRET);
-//                YelpAPI yelpApi = new YelpAPI(CONSUMER_KEY, CONSUMER_SECRET, TOKEN, TOKEN_SECRET);
-//                String searchResponseJSON = yelpApi.searchForBusinessesByLocation("lunch", "AtlantaGeorgia");
-                AsyncTask<String, Void, String> searchResponseJSON = new YelpAPI(content, consumerKey, consumerSecret, token, tokenSecret).execute("Asdf");
-//                JSONParser parser = new JSONParser();
-//                JSONObject response = null;
-//                try {
-//                    response = (JSONObject) parser.parse(searchResponseJSON);
-//                } catch (ParseException pe) {
-//                    System.out.println("Error: could not parse JSON response:");
-//                    System.out.println(searchResponseJSON);
-//                    System.exit(1);
-//                }
-//
-//                JSONArray businesses = (JSONArray) response.get("businesses");
-//                JSONObject firstBusiness = (JSONObject) businesses.get(0);
-//                String firstBusinessID = firstBusiness.get("id").toString();
-//
-//                content.setText(firstBusinessID);
+                AsyncTask<String, Void, String> searchResponseJSON = new YelpAPI(consumerKey, consumerSecret, token, tokenSecret, content)
+                        .execute(mTypeOfFood, mLatitude, mLongitude, mRadius);
             }
         });
     }
