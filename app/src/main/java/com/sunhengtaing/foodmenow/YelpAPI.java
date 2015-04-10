@@ -1,7 +1,5 @@
 package com.sunhengtaing.foodmenow;
 
-import android.content.Context;
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.widget.TextView;
 
@@ -16,8 +14,7 @@ import org.scribe.model.Token;
 import org.scribe.model.Verb;
 import org.scribe.oauth.OAuthService;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
+import java.util.Random;
 
 /**
  * Code sample for accessing the Yelp API V2.
@@ -30,12 +27,14 @@ import com.beust.jcommander.Parameter;
  * See <a href="http://www.yelp.com/developers/documentation">Yelp Documentation</a> for more info.
  * 
  */
-public class YelpAPI extends AsyncTask<String, Void, String>{
+public class YelpAPI extends AsyncTask<String, Void, JSONArray>{
 
     private static final String API_HOST = "api.yelp.com";
-    private static final int SEARCH_LIMIT = 3;
+    private static final int SEARCH_LIMIT = 20;
     private static final String SEARCH_PATH = "/v2/search";
     private static final String BUSINESS_PATH = "/v2/business";
+
+    private String[] mFoodTypes;
 
     private TextView mContent;
     private String mConsumerKey;
@@ -44,6 +43,7 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
     private String mTokenSecret;
     OAuthService service;
     Token accessToken;
+
 
   /**
    * Setup the Yelp API OAuth credentials.
@@ -60,6 +60,7 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
     mToken = token;
     mTokenSecret = tokenSecret;
     mContent = content;
+    mFoodTypes = new String[]{"mexican", "asian", "mediterranean"};
   }
 
   /**
@@ -118,37 +119,48 @@ public class YelpAPI extends AsyncTask<String, Void, String>{
   }
 
     @Override
-    protected String doInBackground(String... params) {
+    protected JSONArray doInBackground(String... params) {
         this.service = new ServiceBuilder().provider(TwoStepOAuth.class).apiKey(mConsumerKey).apiSecret(mConsumerSecret).build();
         this.accessToken = new Token(mToken, mTokenSecret);
-        String businesses = searchForBusinessesByLocation(params[0], params[1], params[2], params[3]);
+        String term = params[0];
+        String latitude = params[1];
+        String longitude = params[2];
+        String radius = params[3];
+        JSONParser parser = new JSONParser();
+        JSONArray businesses = new JSONArray();
+        for (String foodType : mFoodTypes) {
+            String responseString = searchForBusinessesByLocation(foodType, latitude, longitude, radius);
+            JSONObject response = null;
+            try {
+                response = (JSONObject) parser.parse(responseString);
+            } catch (ParseException pe) {
+                System.out.println("Error: could not parse JSON response:");
+                System.out.println(responseString);
+                System.exit(1);
+            }
+            System.out.println("Returning total Businesses: " + businesses.size());
+
+            businesses.addAll((JSONArray) response.get("businesses"));
+        }
+        System.out.println("Returning total Businesses: " + businesses.size());
+
         return businesses;
     }
 
     @Override
-    protected void onPostExecute(String result) {
-//        mContent.setText(result);
-        JSONParser parser = new JSONParser();
-        JSONObject response = null;
-        try {
-          response = (JSONObject) parser.parse(result);
-        } catch (ParseException pe) {
-          System.out.println("Error: could not parse JSON response:");
-          System.out.println(result);
-          System.exit(1);
-        }
+    protected void onPostExecute(JSONArray businessesJSONArray) {
+        Random rand = new Random();
+        int randomIndex = rand.nextInt(businessesJSONArray.size());
+        JSONObject randomBusiness = (JSONObject) businessesJSONArray.get(randomIndex);
+        String randomBusinessName = randomBusiness.get("name").toString();
+        JSONArray locations = (JSONArray)((JSONObject)randomBusiness.get("location")).get("address");
+        String randomBusinessLocation = locations.get(0).toString();
+        StringBuilder contentText = new StringBuilder();
+        contentText.append(randomBusinessName + "\n");
+        contentText.append(randomBusinessLocation);
+//        mContent.setText(firstBusinessID + randomIndex);
+        mContent.setText(contentText.toString());
+//        System.out.println("Returning total Businesses: " + businessesJSONArray.size());
 
-        JSONArray businesses = (JSONArray) response.get("businesses");
-        JSONObject firstBusiness = (JSONObject) businesses.get(0);
-        String firstBusinessID = firstBusiness.get("id").toString();
-        mContent.setText(firstBusinessID);
-        System.out.println(String.format(
-            "%s businesses found, querying business info for the top result \"%s\" ...",
-            businesses.size(), firstBusinessID));
-
-        // Select the first business and display business details
-//        String businessResponseJSON = searchByBusinessId(firstBusinessID.toString());
-//        System.out.println(String.format("Result for business \"%s\" found:", firstBusinessID));
-//        System.out.println(businessResponseJSON);
     }
 }

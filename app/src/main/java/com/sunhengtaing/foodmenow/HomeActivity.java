@@ -1,6 +1,9 @@
 package com.sunhengtaing.foodmenow;
 
 import android.content.Context;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.StrictMode;
 import android.support.v7.app.ActionBarActivity;
@@ -18,11 +21,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.util.List;
+
 
 public class HomeActivity extends ActionBarActivity {
 
-    private String mLatitude;
-    private String mLongitude;
+    private LocationManager mLocationManager;
+
+    private Location mLocation;
     private String mTypeOfFood;
     private String mRadius;
 
@@ -31,11 +37,27 @@ public class HomeActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        mTypeOfFood = "Lunch";
-        mRadius = "1000";
-        mLatitude = 33.774018 + "";
-        mLongitude = -84.398813 + "";
+        mLocation = getLastKnownLocation();
+        mTypeOfFood = "Food";
+        mRadius = "10000";
         findButtonListener();
+    }
+
+    private Location getLastKnownLocation() {
+        mLocationManager = (LocationManager)getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = mLocationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            Location l = mLocationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
     }
 
     public void findButtonListener() {
@@ -49,8 +71,8 @@ public class HomeActivity extends ActionBarActivity {
                 String consumerSecret = getResources().getString(R.string.CONSUMER_SECRET);
                 String token = getResources().getString(R.string.TOKEN);
                 String tokenSecret = getResources().getString(R.string.TOKEN_SECRET);
-                AsyncTask<String, Void, String> searchResponseJSON = new YelpAPI(consumerKey, consumerSecret, token, tokenSecret, content)
-                        .execute(mTypeOfFood, mLatitude, mLongitude, mRadius);
+                AsyncTask<String, Void, JSONArray> searchResponseJSON = new YelpAPI(consumerKey, consumerSecret, token, tokenSecret, content)
+                        .execute(mTypeOfFood, Double.toString(mLocation.getLatitude()), Double.toString(mLocation.getLongitude()), mRadius);
             }
         });
     }
