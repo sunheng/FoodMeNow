@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Food Me Now</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="btFind">Me So Hungry</string>
+    <string name="InstructionPressButton">How hungry are you?</string>
+    <string name="CONSUMER_KEY">-4fS2y7Rwml9xXowup8Pxw</string>
+    <string name="CONSUMER_SECRET">eKssg6pSHmtq1580Op35ae3Ozuw</string>
+    <string name="TOKEN">wKUe0xXlbtzgggeIpyvqEGg7qAz-cEPL</string>
+    <string name="TOKEN_SECRET">P4faV3XaG6VUfSWy-5_Wq0dVX_Q</string>
+</resources>
